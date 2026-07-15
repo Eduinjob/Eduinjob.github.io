@@ -1537,6 +1537,7 @@
                 </div>
             </div>
         </div>
+        <script>
         // ════════════════════════════════════════════════════════════════════════════════
         // ⚙️ API 설정
         // ════════════════════════════════════════════════════════════════════════════════
@@ -2304,11 +2305,11 @@
                 if (username === 'admin' && password === 'admin2026') {
                     console.log('✅ 관리자 로그인 성공!');
                     
-                    currentUser = {
+                    setCurrentUser({
                         username: 'admin',
                         role: 'admin',
                         staff_id: null
-                    };
+                    });
                     
                     showLoginScreen(false);
                     updateUIByRole('admin', 'admin');
@@ -2358,12 +2359,12 @@
 
                     console.log(`✅ 로그인 성공: ${username}`);
                     
-                    currentUser = {
+                    setCurrentUser({
                         username: username,
                         role: 'user',
                         staff_id: staffInfo.staff_id,
                         staff_name: username
-                    };
+                    });
 
                     showLoginScreen(false);
                     updateUIByRole('user', username);
@@ -2379,7 +2380,7 @@
                     
                     // Supabase 실패해도 admin은 작동
                     if (username === 'admin' && password === 'admin2026') {
-                        currentUser = { username: 'admin', role: 'admin', staff_id: null };
+                        setCurrentUser({ username: 'admin', role: 'admin', staff_id: null });
                         showLoginScreen(false);
                         updateUIByRole('admin', 'admin');
                         showMessage('✅ 관리자로 로그인했습니다!', 'success');
@@ -2398,6 +2399,9 @@
                 return false;
             }
         }
+
+        // 인라인 onclick에서도 확실히 찾을 수 있도록 전역 등록
+        window.handleLogin = handleLogin;
 
         // 로그인 상태 확인
         function checkLoginStatus() {
@@ -3011,7 +3015,7 @@
         // ════════════════════════════════════════════════════════════════════════════════
 
         let budgetCurrentPage = 1;
-        let budgetItemsPerPage = 10;
+        let budgetItemsPerPage = 20;
         let budgetAllData = [];
 
         let currentBudgetCategory = '';
@@ -3132,9 +3136,6 @@
 
             document.getElementById('totalBudgetAmount').textContent = total.toLocaleString() + '원';
         }
-
-        let budgetCurrentPage = 1;
-        let budgetItemsPerPage = 20;
 
         async function searchBudgetsRealtime() {
             try {
@@ -3317,26 +3318,6 @@
                 displayBudgetPage();
             }
         }
-                console.error('예산 삭제 오류:', error);
-                showMessage('삭제에 실패했습니다.', 'error');
-            }
-        }
-
-        function nextBudgetPage() {
-            const totalPages = Math.ceil(budgetAllData.length / budgetItemsPerPage);
-            if (budgetCurrentPage < totalPages) {
-                budgetCurrentPage++;
-                displayBudgetPage();
-            }
-        }
-
-        function previousBudgetPage() {
-            if (budgetCurrentPage > 1) {
-                budgetCurrentPage--;
-                displayBudgetPage();
-            }
-        }
-
         function editBudget(budgetId) {
             alert('수정 기능은 준비 중입니다.');
         }
@@ -3434,7 +3415,6 @@
         let attendanceCurrentPage = 1;
         let attendanceItemsPerPage = 20;
         let attendanceAllData = [];
-        let budgetAllData = [];
         let currentEditBudgetId = null;
 
         async function searchAttendance() {
@@ -4711,6 +4691,19 @@
                 const budgetQuantity = document.getElementById('budgetQuantity');
                 if (budgetPrice) budgetPrice.addEventListener('input', calculateBudgetAmount);
                 if (budgetQuantity) budgetQuantity.addEventListener('input', calculateBudgetAmount);
+
+                // 로그인 입력창에서 Enter 키로 로그인
+                ['loginUsername', 'loginPassword'].forEach(id => {
+                    const input = document.getElementById(id);
+                    if (input) {
+                        input.addEventListener('keydown', function(e) {
+                            if (e.key === 'Enter') {
+                                e.preventDefault();
+                                window.handleLogin();
+                            }
+                        });
+                    }
+                });
                 
                 console.log('✅ 페이지 초기화 완료');
             } catch (error) {
@@ -4719,6 +4712,12 @@
                 checkLoginStatus();
             }
         });
+    </script>
+    <script>
+        // 🔐 handleLogin 함수를 onclick에서 접근 가능하도록 전역으로 노출
+        window.handleLogin = typeof handleLogin !== 'undefined' ? handleLogin : function() {
+            console.error('handleLogin 함수를 찾을 수 없습니다');
+        };
     </script>
     </div> <!-- mainContent 닫기 -->
 </body>
